@@ -89,9 +89,16 @@ static void InitASI()
 			Nop( match.get<void>( 2 ), 5 );
 		} );
 	}
+
+
+	// Cap Toylets to 30FPS
+	{
+		auto toyletsFpsCap = get_pattern( "B9 ? ? ? ? E8 ? ? ? ? B9 07 00 00 00", 1 );
+		Patch<int32_t>( toyletsFpsCap, 30 );
+	}
 }
 
-// ========== Hooking boiletplate ==========
+// ========== Hooking boilerplate ==========
 namespace HookInit
 {
 
