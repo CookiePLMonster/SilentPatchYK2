@@ -9,12 +9,10 @@
 #include "Utils/Trampoline.h"
 #include "Utils/Patterns.h"
 
-TrampolineMgr trampolines;
-
 namespace ForcedMinigameFPS
 {
 	static bool minigameFPSForced = false;
-	static int* userFPSCap_ForMinigame;
+	static int& userFPSCap_ForMinigame = Trampoline::MakeTrampoline( GetModuleHandle( nullptr ) )->Reference<int>();
 	static int userFPSCap;
 
 	static void (*orgSetUserFPSCap)(int cap);
@@ -24,7 +22,7 @@ namespace ForcedMinigameFPS
 		userFPSCap = cap;
 		if ( !minigameFPSForced )
 		{
-			*userFPSCap_ForMinigame = cap;
+			userFPSCap_ForMinigame = cap;
 		}
 	}
 
@@ -36,11 +34,11 @@ namespace ForcedMinigameFPS
 		orgSetMinigameFPSCap( cap );
 		if constexpr ( force )
 		{
-			*userFPSCap_ForMinigame = 0;
+			userFPSCap_ForMinigame = 0;
 		}
 		else
 		{
-			*userFPSCap_ForMinigame = userFPSCap;
+			userFPSCap_ForMinigame = userFPSCap;
 		}
 		minigameFPSForced = force;
 	}
@@ -138,12 +136,10 @@ static void InitASI()
 	{
 		using namespace ForcedMinigameFPS;
 
-		Trampoline& trampoline = trampolines.MakeTrampoline( GetModuleHandle( nullptr ) );
-		
-		userFPSCap_ForMinigame = trampoline.Pointer<int>();
+		Trampoline* trampoline = Trampoline::MakeTrampoline( GetModuleHandle( nullptr ) );
 
-		auto enableCapTrampoline = trampoline.Jump(SetMinigameFPSCap_ForcedFPS<true>);
-		auto disableCapTrampoline = trampoline.Jump(SetMinigameFPSCap_ForcedFPS<false>);
+		auto enableCapTrampoline = trampoline->Jump(SetMinigameFPSCap_ForcedFPS<true>);
+		auto disableCapTrampoline = trampoline->Jump(SetMinigameFPSCap_ForcedFPS<false>);
 
 		auto setFPSCap = get_pattern( "EB 02 33 C9 E8 ? ? ? ? 4C 8B 05", 4 );
 		auto tickUserFPSCheck = get_pattern( "48 8B 15 ? ? ? ? 85 D2", 3 );
@@ -155,7 +151,7 @@ static void InitASI()
 		auto disableArcadeFPSCap_vf5 = get_pattern( "33 C9 E8 ? ? ? ? 90 48 8B 8B 10 03 00 00", 2 );
 
 		ReadCall( setFPSCap, orgSetUserFPSCap );
-		InjectHook( setFPSCap, trampoline.Jump(SetUserFPSCap_ForcedFPS) );
+		InjectHook( setFPSCap, trampoline->Jump(SetUserFPSCap_ForcedFPS) );
 
 		ReadCall( enableArcadeFPSCap_m2, orgSetMinigameFPSCap );
 		InjectHook( enableArcadeFPSCap_m2, enableCapTrampoline );
@@ -164,7 +160,7 @@ static void InitASI()
 		InjectHook( enableArcadeFPSCap_vf5, enableCapTrampoline );
 		InjectHook( disableArcadeFPSCap_vf5, disableCapTrampoline );
 
-		WriteOffsetValue( tickUserFPSCheck, userFPSCap_ForMinigame );
+		WriteOffsetValue( tickUserFPSCheck, &userFPSCap_ForMinigame ); // This comes from Trampoline memory!
 	}
 }
 
@@ -237,8 +233,8 @@ static bool PatchIAT_ByPointers()
 	pOrgGetCommandLineA = GetCommandLineA;
 	memcpy( orgCode, pOrgGetCommandLineA, sizeof(orgCode) );
 
-	Trampoline& trampoline = trampolines.MakeTrampoline( pOrgGetCommandLineA );
-	Memory::VP::InjectHook( pOrgGetCommandLineA, trampoline.Jump(&GetCommandLineA_OverwritingHook), PATCH_JUMP );
+	Trampoline* trampoline = Trampoline::MakeTrampoline( pOrgGetCommandLineA );
+	Memory::VP::InjectHook( pOrgGetCommandLineA, trampoline->Jump(&GetCommandLineA_OverwritingHook), PATCH_JUMP );
 	return true;
 }
 
