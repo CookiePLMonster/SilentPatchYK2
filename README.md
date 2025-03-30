@@ -13,9 +13,8 @@ flawed and introduced noticeable frame pacing issues.
 
 * Frame pacing has been drastically improved when "Framelimit" option is not set to "Unlimited"
 * Toylets minigame has been capped to 30 FPS, essentially making it playable without having to change game settings
-* Arcade games are now forcibly capped to 60 FPS, even if "Framelimit" option is set to 30 FPS in options
+* Arcade games and Karaoke are now forcibly capped to 60 FPS, even if "Framelimit" option is set to 30 FPS in options
 * The following minigames have been capped by the official patch for no reason and have been uncapped again now:
-  - Karaoke
   - Mahjong
   - Oicho Kabu
   - Cee-lo

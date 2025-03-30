@@ -64,10 +64,6 @@ void OnInitializeHook()
 	// Uncap minigames which did not need to be capped
 	{
 		void* noppedFpsCalls[] = {
-			// Karaoke
-			 get_pattern( "41 8D 4C 24 3C E8 ? ? ? ? B2 01", 5 ),
-			 get_pattern( "33 C9 E8 ? ? ? ? 90 41 B8 ? ? ? ? 48 8D 54 24 ? 48 8B CB E8 ? ? ? ? 90 4C 8B C0", 2 ),
-
 			 // Mahjong
 			 get_pattern( "8D 48 3C E8 ? ? ? ? 33 C9", 3 ),
 			 get_pattern( "E8 ? ? ? ? 90 49 8B CE 4C 8D 5C 24 ? 49 8B 5B 30" ),
@@ -151,6 +147,9 @@ void OnInitializeHook()
 		auto enableArcadeFPSCap_vf5 = get_pattern( "41 8D 4E 3C E8", 4 );
 		auto disableArcadeFPSCap_vf5 = get_pattern( "33 C9 E8 ? ? ? ? 90 48 8B 8B 10 03 00 00", 2 );
 
+		auto enableFPSCap_Karaoke = get_pattern( "41 8D 4C 24 3C E8 ? ? ? ? B2 01", 5 );
+		auto disableFPSCap_Karaoke = get_pattern( "33 C9 E8 ? ? ? ? 90 41 B8 ? ? ? ? 48 8D 54 24 ? 48 8B CB E8 ? ? ? ? 90 4C 8B C0", 2 );
+
 		ReadCall( setFPSCap, orgSetUserFPSCap );
 		InjectHook( setFPSCap, trampoline->Jump(SetUserFPSCap_ForcedFPS) );
 
@@ -160,6 +159,9 @@ void OnInitializeHook()
 
 		InjectHook( enableArcadeFPSCap_vf5, enableCapTrampoline );
 		InjectHook( disableArcadeFPSCap_vf5, disableCapTrampoline );
+
+		InjectHook(enableFPSCap_Karaoke, enableCapTrampoline);
+		InjectHook(disableFPSCap_Karaoke, disableCapTrampoline);
 
 		WriteOffsetValue( tickUserFPSCheck, &userFPSCap_ForMinigame ); // This comes from Trampoline memory!
 	}
